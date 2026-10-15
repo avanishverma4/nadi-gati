@@ -1,0 +1,35 @@
+rules_version = '2';
+
+// Who may read and upload files in Cloud Storage. Visitors are anonymous; tests are in
+// tests/storage.rules.test.ts (npm run test:rules).
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Photos attached to community flood reports. Public read; anonymous create only.
+    // The website always re-encodes photos as JPEG (at most 2048 px, which strips location data)
+    // and names them photo_<ms>_<random>, so anything else isn't a report photo: refusing it keeps
+    // the bucket from being used as free anonymous file hosting and blocks SVG/HTML payloads.
+    match /report_photos/{photoId} {
+      allow read: if true;
+      allow create: if resource == null
+                   && photoId.matches('^photo_[0-9]{13}_[a-z0-9]{1,16}$')
+                   && request.resource.size > 0
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType == 'image/jpeg'
+                   && request.resource.metadata.anonymous == 'true';
+      allow update, delete: if false;
+    }
+
+    // Legacy upload path. The website no longer writes here, but files uploaded earlier may still
+    // be linked from old reports, so they stay readable.
+    match /flood_reports/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Default deny catch-all
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

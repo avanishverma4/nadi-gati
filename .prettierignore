@@ -1,0 +1,11 @@
+node_modules
+.next
+dist
+build
+functions/lib
+bun.lock
+package-lock.json
+next-env.d.ts
+firestore-debug.log
+firebase-debug.log
+ui-debug.log

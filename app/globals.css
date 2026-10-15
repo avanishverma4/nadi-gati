@@ -1,0 +1,301 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, .dark, .dark *));
+
+@layer base {
+  :root,
+  [data-theme="light"],
+  .light {
+    /* Light theme colour roles (Material 3 naming: each "on-" colour is the text on its pair) */
+    /* primary, tertiary and success are dark enough for 4.5:1 text on every light surface,
+       including surface-container-highest and the container colours */
+    --primary: #0963ab;
+    --on-primary: #ffffff;
+    --primary-container: #d4e7f7;
+    --on-primary-container: #0a2036;
+
+    --secondary: #466a86;
+    --on-secondary: #ffffff;
+    --secondary-container: #dfe6ec;
+    --on-secondary-container: #041f32;
+
+    --tertiary: #795d00;
+    --on-tertiary: #ffffff;
+    --tertiary-container: #ffe699;
+    --on-tertiary-container: #2b1f00;
+
+    --error: #ae1e2c;
+    --on-error: #ffffff;
+    --error-container: #f3d8db;
+    --on-error-container: #410006;
+
+    --success: #186f46;
+    --on-success: #ffffff;
+    --success-container: #d9f2e6;
+    --on-success-container: #002111;
+
+    --surface: #fafafa;
+    --surface-dim: #dadada;
+    --surface-bright: #fafafa;
+    --surface-container-lowest: #ffffff;
+    --surface-container-low: #f4f4f4;
+    --surface-container: #eeeeee;
+    --surface-container-high: #e8e8e8;
+    --surface-container-highest: #e2e2e2;
+    --on-surface: #191a1a;
+    --on-surface-variant: #464d53;
+    --outline: #74818b;
+    --outline-variant: #c7cdd1;
+
+    --inverse-surface: #2e3133;
+    --inverse-on-surface: #f0f1f2;
+    --inverse-primary: #9ecef8;
+
+    /* Dims the page behind dialogs */
+    --scrim: #000000;
+  }
+
+  [data-theme="dark"],
+  .dark {
+    /* Dark theme colour roles */
+    --primary: #9ecef8;
+    --on-primary: #003355;
+    --primary-container: #004b77;
+    --on-primary-container: #d4e7f7;
+
+    --secondary: #adcae6;
+    --on-secondary: #16334a;
+    --secondary-container: #2e4e68;
+    --on-secondary-container: #dfe6ec;
+
+    --tertiary: #f5c138;
+    --on-tertiary: #453300;
+    --tertiary-container: #664e00;
+    --on-tertiary-container: #ffe699;
+
+    --error: #ffb4ab;
+    --on-error: #690010;
+    --error-container: #93001a;
+    --on-error-container: #ffdad6;
+
+    --success: #7bd8a1;
+    --on-success: #00391d;
+    --success-container: #00522c;
+    --on-success-container: #d9f2e6;
+
+    --surface: #111315;
+    --surface-dim: #0e1011;
+    --surface-bright: #37393b;
+    --surface-container-lowest: #0c0e0f;
+    --surface-container-low: #191b1d;
+    --surface-container: #1d1f21;
+    --surface-container-high: #282a2c;
+    --surface-container-highest: #333537;
+    --on-surface: #e1e2e5;
+    --on-surface-variant: #c1c7ce;
+    --outline: #8b9198;
+    --outline-variant: #41474d;
+
+    --inverse-surface: #e1e2e5;
+    --inverse-on-surface: #2e3133;
+    --inverse-primary: #0963ab;
+
+    --scrim: #000000;
+  }
+}
+
+@theme {
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-primary-container: var(--primary-container);
+  --color-on-primary-container: var(--on-primary-container);
+
+  --color-secondary: var(--secondary);
+  --color-on-secondary: var(--on-secondary);
+  --color-secondary-container: var(--secondary-container);
+  --color-on-secondary-container: var(--on-secondary-container);
+
+  --color-tertiary: var(--tertiary);
+  --color-on-tertiary: var(--on-tertiary);
+  --color-tertiary-container: var(--tertiary-container);
+  --color-on-tertiary-container: var(--on-tertiary-container);
+
+  --color-error: var(--error);
+  --color-on-error: var(--on-error);
+  --color-error-container: var(--error-container);
+  --color-on-error-container: var(--on-error-container);
+
+  --color-success: var(--success);
+  --color-on-success: var(--on-success);
+  --color-success-container: var(--success-container);
+  --color-on-success-container: var(--on-success-container);
+
+  --color-surface: var(--surface);
+  --color-surface-dim: var(--surface-dim);
+  --color-surface-bright: var(--surface-bright);
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-on-surface: var(--on-surface);
+  --color-on-surface-variant: var(--on-surface-variant);
+  --color-outline: var(--outline);
+  --color-outline-variant: var(--outline-variant);
+
+  --color-inverse-surface: var(--inverse-surface);
+  --color-inverse-on-surface: var(--inverse-on-surface);
+  --color-inverse-primary: var(--inverse-primary);
+  --color-scrim: var(--scrim);
+
+  /* Status colours for map markers and their legends. Fixed rather than themed because they sit on
+     map tiles, which look the same in light and dark mode. */
+  --color-map-danger: #d92d3a;
+  --color-map-watch: #f59e0b;
+  --color-map-normal: #16a34a;
+  --color-map-pin: #0a70c2;
+
+  /* Brand fonts are linked in app/layout.tsx. The Devanagari face sits in the stack so Hindi
+     characters inside English text also get a proper font. */
+  --font-sans:
+    "Google Sans", var(--font-devanagari), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  --font-mono: "Roboto Mono", monospace;
+  --font-code: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-full: 999px;
+
+  --shadow-elevation-1: 0px 1px 2px 0px rgba(0, 0, 0, 0.08), 0px 1px 3px 1px rgba(0, 0, 0, 0.05);
+  --shadow-elevation-2: 0px 1px 2px 0px rgba(0, 0, 0, 0.12), 0px 2px 6px 2px rgba(0, 0, 0, 0.08);
+  --shadow-elevation-3: 0px 1px 3px 0px rgba(0, 0, 0, 0.14), 0px 4px 8px 3px rgba(0, 0, 0, 0.1);
+  --shadow-elevation-4: 0px 2px 3px 0px rgba(0, 0, 0, 0.16), 0px 6px 10px 4px rgba(0, 0, 0, 0.12);
+}
+
+body {
+  background-color: var(--surface);
+  color: var(--on-surface);
+  font-family: var(--font-sans);
+  transition:
+    background-color 200ms ease,
+    color 200ms ease,
+    border-color 200ms ease;
+}
+
+::selection {
+  background-color: var(--primary-container);
+  color: var(--on-primary-container);
+}
+
+/* Hindi text uses the Devanagari face first, so its matras and conjuncts render correctly */
+:lang(hi) {
+  font-family: var(--font-devanagari), var(--font-sans);
+}
+
+/* Base type for elements without their own classes. Kept in the base layer so Tailwind utilities
+   (text-xs, text-on-surface-variant, ...) still win, and coloured with theme tokens so it follows
+   light and dark mode. */
+@layer base {
+  h1,
+  h2,
+  h3,
+  .alert-title {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--on-surface);
+  }
+
+  p,
+  .report-content,
+  li {
+    font-family: var(--font-sans);
+    line-height: 1.6;
+  }
+
+  /* Genuinely technical values only (code, coordinates); everyday UI text stays in the sans face */
+  .data-metric,
+  .geo-coordinates,
+  code {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 0.9em;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Map markers are drawn in their own HTML, so drop Leaflet's default white box around div icons */
+.leaflet-div-icon.nadi-gati-marker,
+.leaflet-div-icon.nadi-gati-clicked-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.leaflet-container {
+  font-family: inherit;
+  z-index: 10;
+}
+
+/* Dark-mode basemap: the free OpenStreetMap tiles are light-only, so invert and mute them */
+.nadi-map-dark .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.55);
+}
+
+/* A few pulses to draw the eye, then stop. Endless pings on every Danger chip were distracting
+   (WCAG 2.2.2) and kept low-end phones busy. Ends on the invisible frame. */
+@keyframes nadi-ping-few {
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.animate-ping-few {
+  animation: nadi-ping-few 1.2s cubic-bezier(0, 0, 0.2, 1) 3 both;
+}
+
+/* Hero river waves (components/flowing-river-animation.tsx). Each layer is two cycles wide and
+   slides by one, so the loop is seamless. */
+@keyframes nadi-river-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes nadi-river-drift-reverse {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Respect "reduce motion": stop CSS animations and transitions. Pulsing halos (animate-ping) end on
+   their invisible last frame, so they disappear instead of freezing mid-pulse. Motion-library
+   animations are handled separately through MotionConfig reducedMotion="user". */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* The skip link focuses <main> so keyboard users continue from there; it isn't a control, so
+   don't draw a focus ring around the whole page */
+#main-content:focus {
+  outline: none;
+}

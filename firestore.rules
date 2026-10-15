@@ -1,0 +1,143 @@
+rules_version = '2';
+
+// Who may read and write each Firestore collection. Visitors never sign in, so every rule here
+// applies to anonymous browsers. Everything server-side (ingestion, corroboration, corrections,
+// unsubscribe, clean-up) uses the Admin SDK, which bypasses these rules.
+//
+// Tests: tests/firestore.rules.test.ts (npm run test:rules). The data model is described in
+// firebase-blueprint.json and the reasoning in security_spec.md.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Document IDs the website generates: letters, digits, _ and -. Rejecting anything else stops
+    // path tricks and very long IDs.
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Helper: Coordinates inside the box the website accepts for India (see app/report/page.tsx).
+    // Rejects out-of-range values such as latitude 999 and reports from outside the country.
+    function isInServiceArea(lat, lng) {
+      return lat is number && lng is number
+        && lat >= 6 && lat <= 38
+        && lng >= 68 && lng <= 98;
+    }
+
+    // A new community report, exactly as app/report/page.tsx sends it
+    function isValidReport(data) {
+      let requiredKeys = ['category', 'description', 'location', 'geohash', 'createdAt', 'confidence'];
+      let hasRequired = data.keys().hasAll(requiredKeys);
+
+      return hasRequired
+        && data.keys().hasOnly(['category', 'description', 'location', 'geohash', 'createdAt', 'confidence', 'photoUrl', 'districtId'])
+        // Wider than the four categories the form offers today, so older clients keep working
+        && data.category in ['embankment_breach', 'waterlogging', 'river_overflow', 'evacuation_needed', 'road_submerged', 'dam_release', 'general_alert', 'other']
+        && data.description is string && data.description.size() <= 1000
+        // The website sends a GeoPoint (latlng); the plain map form is what the rules tests use
+        && (
+          (data.location is latlng && isInServiceArea(data.location.latitude(), data.location.longitude()))
+          || (data.location is map
+            && data.location.keys().hasOnly(['latitude', 'longitude'])
+            && data.location.keys().hasAll(['latitude', 'longitude'])
+            && isInServiceArea(data.location.latitude, data.location.longitude))
+        )
+        // Only the format can be checked here. The corroboration function recomputes the geohash
+        // from the location, so a mismatched one can't hide or misplace the report.
+        && data.geohash is string && data.geohash.size() >= 4 && data.geohash.size() <= 12 && data.geohash.matches('^[0-9bcdefghjkmnpqrstuvwxyz]+$')
+        && data.createdAt == request.time
+        // Every report starts unconfirmed; only the corroboration function may raise it
+        && (data.confidence == 0 || data.confidence == 0.0)
+        // Only a download link to a photo uploaded through the report form (report_photos/ in our
+        // Storage bucket), never an arbitrary URL that could track viewers or carry a script
+        && (!('photoUrl' in data) || (data.photoUrl is string && data.photoUrl.size() <= 500
+            && data.photoUrl.matches('^https://firebasestorage\\.googleapis\\.com/v0/b/[a-z0-9._-]+/o/report_photos%2Fphoto_[0-9]+_[a-z0-9]+[?]alt=media&token=[a-f0-9-]+$')))
+        && (!('districtId' in data) || (data.districtId is string && data.districtId.size() <= 64));
+    }
+
+    // A new alert subscription, as components/alert-subscription-modal.tsx writes it. (Alerts are
+    // switched off in lib/features.ts until a function sends them, so nothing creates these yet.)
+    function isValidAlertSubscription(data) {
+      let requiredKeys = ['channel', 'severityThreshold', 'unsubscribeToken', 'createdAt'];
+      let hasRequired = data.keys().hasAll(requiredKeys);
+
+      return hasRequired
+        // Exactly the fields the website writes (components/alert-subscription-modal.tsx). Without
+        // this, anyone could attach extra data (or a phone number or email, against the no-PII
+        // promise) to a document nobody can read back.
+        && data.keys().hasOnly(['channel', 'severityThreshold', 'unsubscribeToken', 'createdAt', 'districtId', 'riverId', 'fcmToken'])
+        && data.channel in ['fcm', 'telegram', 'email']
+        && data.severityThreshold in ['advisory', 'warning', 'danger', 'critical']
+        && data.unsubscribeToken is string && data.unsubscribeToken.size() >= 16 && data.unsubscribeToken.size() <= 128 && data.unsubscribeToken.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.createdAt == request.time
+        && (!('districtId' in data) || (data.districtId is string && data.districtId.size() <= 128))
+        && (!('riverId' in data) || (data.riverId is string && data.riverId.size() <= 128))
+        && (!('fcmToken' in data) || (data.fcmToken is string && data.fcmToken.size() <= 300));
+    }
+
+    // Public reference data, written only by the seeding and ingestion functions. Subcollections
+    // the website doesn't read (flowReadings, owmRainfallReadings) fall through to the default deny.
+    match /districts/{districtId} {
+      allow read: if true;
+      allow write: if false;
+
+      match /rainfallReadings/{readingId} {
+        allow read: if true;
+        allow write: if false;
+      }
+    }
+
+    match /gaugeStations/{stationId} {
+      allow read: if true;
+      allow write: if false;
+
+      match /readings/{readingId} {
+        allow read: if true;
+        allow write: if false;
+      }
+    }
+
+    match /reservoirs/{reservoirId} {
+      allow read: if true;
+      allow write: if false;
+
+      match /readings/{readingId} {
+        allow read: if true;
+        allow write: if false;
+      }
+    }
+
+    // Community reports are public and anonymous. Browsers may only create them; the corroboration
+    // function updates them and moderation deletes them, both through the Admin SDK.
+    match /reports/{reportId} {
+      allow read: if true;
+      allow create: if isValidId(reportId) && isValidReport(request.resource.data);
+      allow update, delete: if false;
+    }
+
+    // Create only. Subscriptions hold device push tokens, so nobody can read them back; the
+    // unsubscribeAlert function deletes one after checking its unsubscribeToken.
+    match /alertSubscriptions/{subscriptionId} {
+      allow read: if false;
+      allow create: if isValidId(subscriptionId) && isValidAlertSubscription(request.resource.data);
+      allow update, delete: if false;
+    }
+
+    // Place-lookup cache for /api/geocode and /api/hydrology/location-inspect. Server only; it
+    // would be denied by the catch-all anyway, but naming it here makes that explicit.
+    match /external_call_cache/{cacheKey} {
+      allow read, write: if false;
+    }
+
+    // Correction requests include a name and email. Only /api/corrections writes them, through the
+    // Admin SDK after validating them; a client-side create rule only let people skip that check.
+    match /correction_requests/{requestId} {
+      allow read, create, update, delete: if false;
+    }
+
+    // Anything not listed above is closed
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

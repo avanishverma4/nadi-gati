@@ -1,0 +1,241 @@
+{
+  "entities": {
+    "districts": {
+      "title": "District",
+      "description": "District administrative boundary, helpline numbers, and official emergency contacts (Bihar and Assam pilot)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "state": { "type": "string", "enum": ["Bihar", "Assam"] },
+        "boundary": { "type": "object", "description": "GeoPoint location coordinate" },
+        "helplineNumbers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "number": { "type": "string" },
+              "type": { "type": "string" }
+            }
+          }
+        },
+        "source": { "type": "string" },
+        "sourceUrl": { "type": "string" }
+      },
+      "required": ["id", "name", "state", "boundary", "helplineNumbers", "source", "sourceUrl"]
+    },
+    "rainfallReadings": {
+      "title": "Rainfall Reading",
+      "description": "District precipitation time-series reading",
+      "type": "object",
+      "properties": {
+        "value": { "type": "number" },
+        "unit": { "type": "string" },
+        "periodHours": { "type": "number" },
+        "recordedAt": { "type": "string" },
+        "source": { "type": "string" },
+        "sourceUrl": { "type": "string" }
+      },
+      "required": ["value", "recordedAt", "source", "sourceUrl"]
+    },
+    "gaugeStations": {
+      "title": "Gauge Station",
+      "description": "River water level and discharge monitoring station",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "districtId": { "type": "string" },
+        "riverName": { "type": "string" },
+        "location": { "type": "object", "description": "GeoPoint coordinate" },
+        "dangerLevel": { "type": "number" },
+        "warningLevel": { "type": "number" },
+        "source": { "type": "string" },
+        "sourceUrl": { "type": "string" },
+        "latestReading": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "number" },
+            "recordedAt": { "type": "string" },
+            "unit": { "type": "string" },
+            "trend": { "type": "string" },
+            "source": { "type": "string" },
+            "sourceUrl": { "type": "string" }
+          },
+          "required": ["value", "recordedAt", "source", "sourceUrl"]
+        }
+      },
+      "required": ["id", "name", "districtId", "location", "dangerLevel", "warningLevel", "source", "sourceUrl", "latestReading"]
+    },
+    "stationReadings": {
+      "title": "Station Reading",
+      "description": "Historical time-series reading for river gauge station",
+      "type": "object",
+      "properties": {
+        "value": { "type": "number" },
+        "unit": { "type": "string" },
+        "recordedAt": { "type": "string" },
+        "source": { "type": "string" },
+        "sourceUrl": { "type": "string" }
+      },
+      "required": ["value", "recordedAt", "source", "sourceUrl"]
+    },
+    "reservoirs": {
+      "title": "Reservoir",
+      "description": "Reservoir storage and dam water level monitoring",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "districtId": { "type": "string" },
+        "riverName": { "type": "string" },
+        "location": { "type": "object", "description": "GeoPoint coordinate" },
+        "dangerLevel": { "type": "number" },
+        "warningLevel": { "type": "number" },
+        "source": { "type": "string" },
+        "sourceUrl": { "type": "string" },
+        "latestReading": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "number" },
+            "recordedAt": { "type": "string" },
+            "unit": { "type": "string" },
+            "trend": { "type": "string" },
+            "source": { "type": "string" },
+            "sourceUrl": { "type": "string" }
+          },
+          "required": ["value", "recordedAt", "source", "sourceUrl"]
+        }
+      },
+      "required": ["id", "name", "districtId", "location", "dangerLevel", "warningLevel", "source", "sourceUrl", "latestReading"]
+    },
+    "reports": {
+      "title": "Citizen Flood Report",
+      "description": "Anonymous field observation with geohash proximity and algorithmic confidence score",
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": ["embankment_breach", "waterlogging", "river_overflow", "evacuation_needed", "road_submerged", "dam_release", "general_alert"]
+        },
+        "description": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "location": { "type": "object", "description": "GeoPoint coordinate" },
+        "geohash": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "confidence": { "type": "number" },
+        "corroboratedBy": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["category", "description", "location", "geohash", "createdAt", "confidence"]
+    },
+    "alertSubscriptions": {
+      "title": "Alert Subscription",
+      "description": "Citizen emergency warning subscription with secure random unsubscription token",
+      "type": "object",
+      "properties": {
+        "channel": { "type": "string", "enum": ["fcm", "telegram", "email"] },
+        "districtId": { "type": "string" },
+        "riverId": { "type": "string" },
+        "severityThreshold": { "type": "string", "enum": ["advisory", "warning", "danger", "critical"] },
+        "fcmToken": { "type": "string" },
+        "telegramChatId": { "type": "string" },
+        "unsubscribeToken": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["channel", "severityThreshold", "unsubscribeToken", "createdAt"]
+    },
+    "externalCallCache": {
+      "title": "External Call Cache",
+      "description": "Short-TTL cache for external API calls (e.g. Nominatim geocoding) with stored response and expiration timestamp",
+      "type": "object",
+      "properties": {
+        "key": { "type": "string" },
+        "service": { "type": "string" },
+        "response": { "type": "object" },
+        "cachedAt": { "type": "number" },
+        "expiresAt": { "type": "number" },
+        "ttlMs": { "type": "number" }
+      },
+      "required": ["key", "service", "response", "cachedAt", "expiresAt"]
+    },
+    "rateLimitLocks": {
+      "title": "Rate Limit Lock",
+      "description": "Distributed rate limiting lock guaranteeing minimum intervals (e.g. 1 req/sec for Nominatim)",
+      "type": "object",
+      "properties": {
+        "service": { "type": "string" },
+        "lastRequestedAt": { "type": "number" },
+        "nextAvailableAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["service", "nextAvailableAt", "updatedAt"]
+    },
+    "correctionRequests": {
+      "title": "Correction Request",
+      "description": "Monitored citizen or agency inquiries and attribution error reports",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "issueType": { "type": "string" },
+        "targetEntity": { "type": "string" },
+        "description": { "type": "string" },
+        "referenceUrl": { "type": "string" },
+        "status": { "type": "string", "enum": ["open", "investigating", "resolved", "dismissed"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "email", "issueType", "description", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/districts/{districtId}": {
+      "schema": "districts",
+      "description": "Administrative boundaries, emergency contacts and helplines for Bihar and Assam pilot"
+    },
+    "/districts/{districtId}/rainfallReadings/{readingId}": {
+      "schema": "rainfallReadings",
+      "description": "Rainfall precipitation time-series readings for the district"
+    },
+    "/gaugeStations/{stationId}": {
+      "schema": "gaugeStations",
+      "description": "River gauge monitoring station metadata and latest synced reading"
+    },
+    "/gaugeStations/{stationId}/readings/{readingId}": {
+      "schema": "stationReadings",
+      "description": "Time-series gauge level and discharge readings for the station"
+    },
+    "/reservoirs/{reservoirId}": {
+      "schema": "reservoirs",
+      "description": "Reservoirs and dams monitoring storage capacity and water level"
+    },
+    "/reservoirs/{reservoirId}/readings/{readingId}": {
+      "schema": "stationReadings",
+      "description": "Time-series reservoir level readings"
+    },
+    "/reports/{reportId}": {
+      "schema": "reports",
+      "description": "Public citizen flood reports with geohash proximity and system corroboration"
+    },
+    "/alertSubscriptions/{subscriptionId}": {
+      "schema": "alertSubscriptions",
+      "description": "Notification tokens and channel preferences for flood emergency alerts"
+    },
+    "/external_call_cache/{cacheKey}": {
+      "schema": "externalCallCache",
+      "description": "Server-side short-TTL cached external responses (Nominatim geocoding)"
+    },
+    "/rate_limit_locks/{service}": {
+      "schema": "rateLimitLocks",
+      "description": "Distributed locks enforcing rate-limiting (1 request/second) across external callers"
+    },
+    "/correction_requests/{requestId}": {
+      "schema": "correctionRequests",
+      "description": "Correction requests and attribution queries with response time tracking"
+    }
+  }
+}

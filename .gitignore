@@ -1,0 +1,19 @@
+node_modules/
+.next/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+public/maplibre-gl-worker.mjs
+
+# Build output: the service worker is generated from app/sw.ts by Serwist on every build
+public/sw.js
+public/sw.js.map
+public/swe-worker-*.js
+public/workbox-*.js
+# Cloud Functions build output (rebuilt by the predeploy step)
+functions/lib/
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo

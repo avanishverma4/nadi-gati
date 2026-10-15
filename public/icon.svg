@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="nadi-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a70c2" />
+      <stop offset="50%" stop-color="#1588e2" />
+      <stop offset="100%" stop-color="#2196f3" />
+    </linearGradient>
+    <linearGradient id="wave-grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#d4e7f7" stop-opacity="0.9" />
+    </linearGradient>
+    <linearGradient id="wave-grad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#9ecef8" stop-opacity="0.85" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.75" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#nadi-grad)" />
+  <path d="M 96 210 C 150 170, 200 250, 260 210 C 320 170, 370 250, 416 210" fill="none" stroke="url(#wave-grad1)" stroke-width="28" stroke-linecap="round" />
+  <path d="M 96 276 C 150 236, 200 316, 260 276 C 320 236, 370 316, 416 276" fill="none" stroke="url(#wave-grad1)" stroke-width="28" stroke-linecap="round" />
+  <path d="M 96 342 C 150 302, 200 382, 260 342 C 320 302, 370 382, 416 342" fill="none" stroke="url(#wave-grad2)" stroke-width="24" stroke-linecap="round" />
+  <circle cx="260" cy="120" r="16" fill="#ffc107" />
+  <circle cx="260" cy="120" r="28" fill="none" stroke="#ffc107" stroke-width="6" opacity="0.6" stroke-dasharray="4 6" />
+</svg>
