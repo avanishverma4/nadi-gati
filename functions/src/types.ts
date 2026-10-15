@@ -22,6 +22,25 @@ export interface DistrictDocument {
   updatedAt?: Timestamp | string;
 }
 
+/** A pilot district as the ingestion jobs see it (src/pilotScope.generated.ts) */
+export interface PilotScopeDistrict {
+  id: string;
+  name: string;
+  state: StateScope;
+  latitude: number;
+  longitude: number;
+}
+
+/** A pilot gauge as the ingestion jobs see it (src/pilotScope.generated.ts) */
+export interface PilotScopeGauge {
+  id: string;
+  name: string;
+  districtId: string;
+  riverName: string;
+  latitude: number;
+  longitude: number;
+}
+
 export interface LatestReading {
   value: number; // water level in metres; river flow lives in LatestFlow
   recordedAt: Timestamp | string;
@@ -111,4 +130,3 @@ export interface ReportDocument {
   districtId?: string;
   corroboratedBy?: string[]; // IDs of nearby corroborating reports
 }
-

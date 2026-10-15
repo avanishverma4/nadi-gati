@@ -2,7 +2,7 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import { Timestamp } from "firebase-admin/firestore";
-import { PILOT_DISTRICTS } from "./seedPilotData";
+import { PILOT_SCOPE_DISTRICTS } from "./pilotScope.generated";
 import { isDomainScrapingAllowed } from "./compliance";
 import { appDb } from "./firestore";
 
@@ -59,11 +59,11 @@ export const ingestOpenWeather = onSchedule(
     const hourKey = utcHourKey();
 
     // One call at a time with a 1-second pause, well inside the free tier's 60 calls a minute
-    for (let i = 0; i < PILOT_DISTRICTS.length; i++) {
-      const district = PILOT_DISTRICTS[i];
+    for (let i = 0; i < PILOT_SCOPE_DISTRICTS.length; i++) {
+      const district = PILOT_SCOPE_DISTRICTS[i];
       try {
-        const lat = district.boundary.latitude;
-        const lon = district.boundary.longitude;
+        const lat = district.latitude;
+        const lon = district.longitude;
 
         const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
         const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });

@@ -39,14 +39,15 @@ publisher.
 The pilot covers **24 districts in Bihar (16) and Assam (8)**, with **112 river gauges on 42
 rivers** and **2 reservoirs**, across five river basins: Ganges, Brahmaputra, Barak, Gandak &
 Ghaghra, and Kosi & Mahananda. Districts, gauges and their thresholds are defined in
-`lib/hydrology-data.ts` (website) and `functions/src/seedPilotData.ts` (Cloud Functions).
+`lib/hydrology-data.ts`; the Cloud Functions build copies the districts and gauges from there
+into `functions/src/pilotScope.generated.ts`, so both always cover the same places.
 
 ## 📡 Data sources
 
 | Source | What Nadi-Gati uses it for | How |
 | --- | --- | --- |
 | Central Water Commission (CWC) | Warning and danger marks, highest flood levels, official bulletins | Cited and linked, never scraped (its site asks automated tools not to collect pages) |
-| Open-Meteo & GloFAS | Modelled river flow and estimated rainfall | Fetched every 30 minutes |
+| Open-Meteo & GloFAS | Modelled river flow and estimated rainfall | Rainfall every 30 minutes, flow every 3 hours |
 | OpenWeatherMap | Recent hourly rainfall per district | Fetched hourly (API key required) |
 | data.gov.in | River water levels (Open Government Data, GODL licence) | Fetched every 6 hours (API key required) |
 | State disaster management authorities | Helplines and official advisories | Cited and linked |
@@ -92,7 +93,7 @@ All functions run in `asia-south1` (Mumbai) and are exported from `functions/src
 
 | Function | Trigger | What it does |
 | --- | --- | --- |
-| `ingestOpenMeteo` | Every 30 minutes | Modelled river flow (GloFAS) and rainfall for pilot gauges and districts |
+| `ingestOpenMeteo` | Every 30 minutes | Rainfall for every pilot district; modelled river flow (GloFAS, refreshed every 3 hours) for the 83 gauges with a checked model cell (`functions/src/flowCells.ts`) |
 | `ingestOpenWeather` | Every hour | Recent rainfall per district from OpenWeatherMap |
 | `ingestDataGov` | Every 6 hours | River water levels from data.gov.in |
 | `onReportCreated` | New report in Firestore | Scores how well the report is backed up by nearby recent reports |
@@ -172,7 +173,21 @@ To run the Firestore and Storage rules tests against the emulators (needs Java 2
 npm run test:rules
 ```
 
-### 6. Deploying Cloud Functions
+### 6. Scheduled data jobs
+
+The data jobs (`ingestOpenMeteo`, `ingestOpenWeather`, `ingestDataGov`, `purgeExpiredData`) run
+from GitHub Actions (`.github/workflows/scheduled-jobs.yml`), so the project can stay on the free
+Spark plan. The workflow builds `functions/` and runs each job with
+`functions/scripts/run-job.mjs`. It needs the repository secret `FIREBASE_SERVICE_ACCOUNT_KEY`;
+`OPENWEATHER_API_KEY`, `DATA_GOV_IN_API_KEY` and the variable `DATA_GOV_RESOURCE_ID` are optional.
+Run any job by hand from the Actions tab (**Run workflow**), or locally:
+```bash
+cd functions && npm run build && FIREBASE_SERVICE_ACCOUNT_KEY="$(cat key.json)" node scripts/run-job.mjs ingestOpenMeteo
+```
+`onReportCreated` (report corroboration) and `unsubscribeAlert` still need the Cloud Functions
+deploy below. If you deploy the scheduled functions too, disable the workflow so they don't run twice.
+
+### 7. Deploying Cloud Functions
 
 Cloud Functions need the Firebase **Blaze** (pay-as-you-go) plan. Functions run in **asia-south1 (Mumbai)**, the same region as the Firestore database
 (`functions/src/options.ts`). Set the secrets once, then deploy:
@@ -185,13 +200,20 @@ firebase deploy --only firestore:rules,firestore:indexes,storage,functions
 If functions were deployed earlier in us-central1, the deploy offers to delete those copies:
 answer yes, or they keep running alongside the new ones.
 
-Then load the pilot data once (the ingestion functions keep it fresh after that):
+The scheduled functions start filling Firestore on their own within 30 minutes; nothing needs
+seeding first. They fetch for every district and gauge in `lib/hydrology-data.ts`: the build
+copies that list into `functions/src/pilotScope.generated.ts` (`npm run sync-scope` in
+`functions/`). River flow is read only for gauges with a checked model cell in
+`functions/src/flowCells.ts`.
+
+Optionally, write the full district, gauge and reservoir documents once. Note that the seed's
+sample river levels are stamped with the time you run it:
 ```bash
 curl -X POST -H "x-seed-token: <your SEED_TOKEN>" \
   https://asia-south1-<project-id>.cloudfunctions.net/seedPilotScope
 ```
 
-### 7. Linting & Formatting
+### 8. Linting & Formatting
 
 Strict ESLint and Prettier configurations are maintained:
 ```bash

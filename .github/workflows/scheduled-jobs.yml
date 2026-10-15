@@ -1,0 +1,79 @@
+# Runs the scheduled Cloud Functions from GitHub Actions instead of Firebase, so the project can
+# stay on the free Spark plan. Each job runs the same code as its Cloud Function
+# (functions/scripts/run-job.mjs). If the functions are ever deployed on Blaze, disable this
+# workflow so the jobs don't run twice.
+#
+# Repository secrets (Settings > Secrets and variables > Actions):
+#   FIREBASE_SERVICE_ACCOUNT_KEY  required: service account JSON with Firestore access
+#   OPENWEATHER_API_KEY           optional: without it ingestOpenWeather skips its run
+#   DATA_GOV_IN_API_KEY           optional: without it ingestDataGov skips its run
+# Repository variable:
+#   DATA_GOV_RESOURCE_ID          optional: a data.gov.in river water-level dataset ID
+#
+# GitHub may start scheduled runs a few minutes late, and disables schedules in a public repo
+# after 60 days without commits; re-enable from the Actions tab if that happens.
+name: Scheduled data jobs
+
+on:
+  schedule:
+    - cron: "*/30 * * * *" # ingestOpenMeteo: rainfall every run, river flow every 3 hours
+    - cron: "10 * * * *" # ingestOpenWeather: hourly
+    - cron: "20 */6 * * *" # ingestDataGov: every 6 hours
+    - cron: "30 21 * * *" # purgeExpiredData: 03:00 IST
+  workflow_dispatch:
+    inputs:
+      job:
+        description: Job to run
+        required: true
+        type: choice
+        options: [ingestOpenMeteo, ingestOpenWeather, ingestDataGov, purgeExpiredData]
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Same job never runs twice at once; a late run waits for the previous one
+    concurrency:
+      group: scheduled-${{ github.event.inputs.job || github.event.schedule }}
+      cancel-in-progress: false
+    steps:
+      - name: Pick the job
+        id: pick
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+          INPUT_JOB: ${{ github.event.inputs.job }}
+        run: |
+          case "$SCHEDULE" in
+            "*/30 * * * *") job=ingestOpenMeteo ;;
+            "10 * * * *") job=ingestOpenWeather ;;
+            "20 */6 * * *") job=ingestDataGov ;;
+            "30 21 * * *") job=purgeExpiredData ;;
+            *) job="$INPUT_JOB" ;;
+          esac
+          echo "job=$job" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Build functions
+        working-directory: functions
+        run: |
+          npm ci
+          npm run build
+
+      - name: Run ${{ steps.pick.outputs.job }}
+        working-directory: functions
+        env:
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+          DATA_GOV_IN_API_KEY: ${{ secrets.DATA_GOV_IN_API_KEY }}
+          DATA_GOV_RESOURCE_ID: ${{ vars.DATA_GOV_RESOURCE_ID }}
+        run: node scripts/run-job.mjs "${{ steps.pick.outputs.job }}"
