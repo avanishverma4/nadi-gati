@@ -2,7 +2,7 @@
  * Public source-code repository. Leave empty until the repository is public: every "View the
  * code" link is hidden while this is empty, so visitors never land on a GitHub 404.
  */
-export const REPO_URL = "";
+export const REPO_URL = "https://github.com/avanishverma4/nadi-gati";
 
 // Sent to OpenStreetMap's Nominatim with every lookup. Its usage policy asks for a User-Agent
 // that identifies the app and gives a working contact.
