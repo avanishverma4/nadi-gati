@@ -1,7 +1,7 @@
 {
   "firestore": [
     {
-      "database": "ai-studio-cd3bfc6c-af8a-4bc1-b36a-ec8975179759",
+      "database": "ai-studio-nadigati-00af5113-69fd-45e4-b0e3-4641377d4458",
       "rules": "firestore.rules",
       "indexes": "firestore.indexes.json"
     }

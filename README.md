@@ -46,8 +46,8 @@ cp .env.example .env.local
 
 Configure:
 ```env
-NEXT_PUBLIC_FIREBASE_PROJECT_ID="gen-lang-client-0050238545"
-NEXT_PUBLIC_FIREBASE_DATABASE_ID="ai-studio-cd3bfc6c-af8a-4bc1-b36a-ec8975179759"
+NEXT_PUBLIC_FIREBASE_PROJECT_ID="gen-lang-client-0353447999"
+NEXT_PUBLIC_FIREBASE_DATABASE_ID="ai-studio-nadigati-00af5113-69fd-45e4-b0e3-4641377d4458"
 ```
 
 ### 3. Local Development
